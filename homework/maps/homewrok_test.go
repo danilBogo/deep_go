@@ -9,32 +9,105 @@ import (
 
 // go test -v homework_test.go
 
+type node struct {
+	key       int
+	value     int
+	isDeleted bool
+
+	left  *node
+	right *node
+}
+
 type OrderedMap struct {
-	// need to implement
+	size int
+	root *node
 }
 
 func NewOrderedMap() OrderedMap {
-	return OrderedMap{} // need to implement
+	return OrderedMap{}
 }
 
 func (m *OrderedMap) Insert(key, value int) {
-	// need to implement
+	defer func() {
+		m.size += 1
+	}()
+
+	if m.size == 0 {
+		m.root = &node{
+			key:   key,
+			value: value,
+		}
+
+		return
+	}
+
+	neededNode, sameKey := findNode(key, m.root)
+	if sameKey {
+		neededNode.isDeleted = false
+		return
+	}
+
+	newNode := &node{key: key, value: value}
+	if key < neededNode.key {
+		neededNode.left = newNode
+	} else {
+		neededNode.right = newNode
+	}
 }
 
 func (m *OrderedMap) Erase(key int) {
-	// need to implement
+	defer func() {
+		m.size -= 1
+	}()
+
+	if m.size == 1 {
+		m.root = nil
+		return
+	}
+
+	neededNode, sameKey := findNode(key, m.root)
+	if sameKey && !neededNode.isDeleted {
+		neededNode.isDeleted = true
+	}
 }
 
 func (m *OrderedMap) Contains(key int) bool {
-	return false // need to implement
+	neededNode, sameKey := findNode(key, m.root)
+	return sameKey && !neededNode.isDeleted
 }
 
 func (m *OrderedMap) Size() int {
-	return 0 // need to implement
+	return m.size
 }
 
 func (m *OrderedMap) ForEach(action func(int, int)) {
-	// need to implement
+	traverse(m.root, action)
+}
+
+func findNode(key int, currentNode *node) (*node, bool) {
+	if key < currentNode.key && currentNode.left != nil {
+		return findNode(key, currentNode.left)
+	}
+
+	if key > currentNode.key && currentNode.right != nil {
+		return findNode(key, currentNode.right)
+	}
+
+	return currentNode, currentNode.key == key
+}
+
+func traverse(currentNode *node, action func(int, int)) {
+	if currentNode.left != nil {
+		traverse(currentNode.left, action)
+	}
+
+	if !currentNode.isDeleted {
+		action(currentNode.key, currentNode.value)
+	}
+
+	if currentNode.right != nil {
+		traverse(currentNode.right, action)
+	}
 }
 
 func TestCircularQueue(t *testing.T) {
